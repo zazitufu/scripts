@@ -4,7 +4,7 @@ start_time=`date --date='0 days ago' "+%Y-%m-%d %H:%M:%S"`
 sleep 2
 #脚本开始
 echo
-echo "Example: plping [filename] [count] "
+echo "Example: plping [filename] [times] "
 echo
 #接收命令行变量
 runtimes=$2
@@ -17,9 +17,9 @@ current_line=0
 while read LINE
 do
 	 ((current_line++))
-   echo "↓↓↓↓↓↓↓  $current_line of $total_line  ##############################################" >> $report
+   echo "#### ↓↓↓  $current_line of $total_line ↓↓↓ ##########################################" >> $report
    ping -q -c $runtimes $LINE | sed '1d' >> $report
-   echo $'\n'>>$report
+   echo $'\n' >> $report
    echo -e "\033[36m$current_line \033[37mof \033[35m$total_line \033[32mFinished: $LINE\033[0m"
 done < $iplist
 echo
@@ -31,4 +31,6 @@ duration=$(echo $(($(date +%s -d "$finish_time")-$(date +%s -d "$start_time"))) 
 echo Finish Time: $(date) >> $report
 #输出运行用时
 echo This shell script execution duration: $duration >> $report
+echo -e "\n" >> $report
 echo -e "\033[34mThis shell script execution duration: \033[0m $duration" 
+echo
