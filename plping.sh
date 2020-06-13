@@ -4,7 +4,7 @@ start_time=`date --date='0 days ago' "+%Y-%m-%d %H:%M:%S"`
 sleep 2
 #脚本开始
 echo
-echo "Example: plping [filename] [times] "
+echo "Example: plping [filename] [count] "
 echo
 #接收命令行变量
 runtimes=$2
