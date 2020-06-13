@@ -12,7 +12,7 @@ eg:
 
 The input file should be one IP/DOMAIN each line
 eg: ip.txt
-----------------
+
 192.168.123.123
 192.168.1.1
 www.google.com
