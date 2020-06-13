@@ -10,7 +10,7 @@ echo
 runtimes=$2
 iplist=$1
 #输出文件为输入文件名后面加.log
-report=./$iplist.log
+report=$iplist.log
 #统计输入文件的总行数
 total_line=$(sed -n '$=' $iplist)
 current_line=0
@@ -21,7 +21,7 @@ do
    ping -q -c $runtimes $LINE | sed '1d' >> $report
    echo $'\n'>>$report
    echo -e "\033[36m$current_line \033[37mof \033[35m$total_line \033[32mFinished: $LINE\033[0m"
-done < ./$iplist
+done < $iplist
 echo
 echo -e "\033[34mOutput File:\033[0m $report"
 #脚本运行总时长统计
