@@ -1,4 +1,11 @@
 # plping   & plmtr  
+Maybe the ip file contain ^M at each line-end
+use dos2unix to pretreat the file
+```
+apt-get install dos2unix
+dos2unix ip.txt
+```
+
 Usage:  
 `plping [filename] [count]  `
   
