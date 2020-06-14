@@ -31,10 +31,10 @@ Prompt display
 5 of 5 Loss:0% Avg:20.096 Finished: 1.1.1.1
 
 Finish Time: 2020年 06月 14日 星期日 18:18:44 CST
-Output File: ip2.log   Detail File: ip2.logb
+Output File: **ip2.log**   Detail File: **ip2.logb**
 This shell script execution duration:  58s
 ```
 
 There will be 2 output files creat in the same path of input file .  
-.log  as the prompt display  
-.logb as the detail of the ping
+**.log**  as the prompt display  
+**.logb** as the detail of the ping
