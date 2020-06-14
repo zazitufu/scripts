@@ -1,5 +1,5 @@
 # plping   & plmtr  
-Maybe the ip file contain ^M at each line-end
+Maybe the ip file from WIN or DOS,contain ^M at each line-end  
 use dos2unix to pretreat the file
 ```
 apt-get install dos2unix
