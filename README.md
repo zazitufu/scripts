@@ -1,15 +1,15 @@
 # plping   & plmtr     for batch processing IPs from file...
 
 Usage:  
-`plping.sh [filename] [count]  ` (default count = 10)  
-`plmtr.sh [filename] [count]  ` (default count = 10)    
+**`plping.sh [filename] [count]  `** (default count = 10)  
+**`plmtr.sh [filename] [count]  `** (default count = 10)    
 
-`chmod +x plping.sh`<br>
-`chmod +x plmtr.sh` 
+**`chmod +x plping.sh`**<br>
+**`chmod +x plmtr.sh`** 
 
 eg：  
-`./plping.sh ip.txt 10`  
-`./plmtr.sh ip.txt 100`
+**`./plping.sh ip.txt 10`**  
+**`./plmtr.sh ip.txt 100`**
 
 The iplist file should be one IP/DOMAIN each line  
 ```
@@ -31,7 +31,7 @@ Prompt display
 5 of 5 Loss:0% Avg:20.096 Finished: 1.1.1.1
 
 Finish Time: 2020年 06月 14日 星期日 18:18:44 CST
-Output File: **ip2.log**   Detail File: **ip2.logb**
+Output File: ip2.log   Detail File: ip2.logb
 This shell script execution duration:  58s
 ```
 
