@@ -1,8 +1,11 @@
 # plping   & plmtr     for batch processing IPs from file...
 
 Usage:  
-**`plping.sh [filename] [count]  `** (default count = 10)  
-**`plmtr.sh [filename] [count]  `** (default count = 10)    
+**`plping.sh [filename] [count]  `**   
+**`plping.sh [filename]   `** (default count = 10)  
+  
+**`plmtr.sh [filename] [count]  `**     
+**`plmtr.sh [filename]   `** (default count = 10)   
 
 **`chmod +x plping.sh`**<br>
 **`chmod +x plmtr.sh`** 
