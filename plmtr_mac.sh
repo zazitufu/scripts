@@ -34,7 +34,7 @@ while read LINE
 do
 	 ((current_line++))
    echo "##################################### $LINE #### | ↓↓↓↓  $current_line of $total_line ↓↓↓↓" >> $report
-   mtr -r -c $runtimes $LINE >> $report
+   sudo mtr -r -c $runtimes $LINE >> $report
    echo $'\n'>> $report
    echo -e "\033[36m$current_line \033[37mof \033[35m$total_line \033[32mFinished: $LINE\033[0m"
 done < $iplist
