@@ -28,8 +28,8 @@ report=$iplist.logb
 total_line=$(sed -n '$=' $iplist)
 current_line=0
 
-# 预处理输入文件，将符号^M删掉
-sed -i "s/\x0D//g" $iplist
+# 预处理输入文件，将符号^M删掉，因为只有windows和dos编辑器会产生这个字符，mac客户端这行可以注释掉。
+# sed -i "s/\x0D//g" $iplist
 
 # 开始处理输入文件内的IP
 echo "## ↓↓↓ $(date) ↓↓↓ ######" >> $sum_report
