@@ -35,7 +35,7 @@ current_line=0
 echo "## ↓↓↓ $(date) ↓↓↓ ######" >> $sum_report
 echo >> $sum_report
 
-while read LINE
+while read LINE  || [[ -n ${LINE} ]]
 do
 	 ((current_line++))
    echo "#### ↓↓↓  $current_line of $total_line ↓↓↓ ##########################################" >> $report
