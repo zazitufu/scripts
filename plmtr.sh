@@ -30,7 +30,7 @@ current_line=0
 sed -i "s/\x0D//g" $iplist
 
 # 开始处理文件内IP
-while read LINE
+while read LINE  || [[ -n ${LINE} ]]
 do
 	 ((current_line++))
    echo "##################################### $LINE #### | ↓↓↓↓  $current_line of $total_line ↓↓↓↓" >> $report
