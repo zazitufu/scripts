@@ -1,23 +1,25 @@
 #!/bin/bash
 # 记录开始时间
 start_time=`date --date='0 days ago' "+%Y-%m-%d %H:%M:%S"`
-sleep 2
+sleep 1
 # 脚本开始
-echo
 # 接收命令行变量
 runtimes=$2
 iplist=$1
+
 # 判断是否有输入文件名和运行次数
 if [ ! -f "$iplist" ] && [ ! -n "$runtimes" ];then
 	echo
 	echo "Example: plping [filename] [count] (default count = 10)"
-        echo
+  echo
 exit
 elif [ ! -n "$runtimes" ];then
 	runtimes=10
 fi
+echo
 echo "O(∩_∩)O Relax... Take a cup of coffee? tea?   Not me !!!"
 echo 
+
 # 输出文件为输入文件名后面加.log,  详细输出文件为输入文件名后面加.logb
 sum_report=$iplist.log
 report=$iplist.logb
@@ -32,6 +34,7 @@ sed -i "s/\x0D//g" $iplist
 # 开始处理输入文件内的IP
 echo "## ↓↓↓ $(date) ↓↓↓ ######" >> $sum_report
 echo >> $sum_report
+
 while read LINE
 do
 	 ((current_line++))
