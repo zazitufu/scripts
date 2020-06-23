@@ -1,25 +1,23 @@
 #!/bin/bash
 # 记录开始时间
 start_time=`date "+%Y-%m-%d %H:%M:%S"`
-sleep 1
+sleep 2
 # 脚本开始
+echo
 # 接收命令行变量
 runtimes=$2
 iplist=$1
-
 # 判断是否有输入文件名和运行次数
 if [ ! -f "$iplist" ] && [ ! -n "$runtimes" ];then
 	echo
 	echo "Example: plping [filename] [count] (default count = 10)"
-  echo
+        echo
 exit
 elif [ ! -n "$runtimes" ];then
 	runtimes=10
 fi
-echo
 echo "O(∩_∩)O Relax... Take a cup of coffee? tea?   Not me !!!"
 echo 
-
 # 输出文件为输入文件名后面加.log,  详细输出文件为输入文件名后面加.logb
 sum_report=$iplist.log
 report=$iplist.logb
@@ -34,13 +32,12 @@ sed -i "s/\x0D//g" $iplist
 # 开始处理输入文件内的IP
 echo "## ↓↓↓ $(date) ↓↓↓ ######" >> $sum_report
 echo >> $sum_report
-
 while read LINE
 do
 	 ((current_line++))
    echo "#### ↓↓↓  $current_line of $total_line ↓↓↓ ##########################################" >> $report
    ping -q -c $runtimes $LINE | sed '1d' >> $report
-   los_avg=$(echo -e Loss:$(echo $(tail -n 4 $report | grep "packet loss") | awk '{print $7}') Avg:$(echo $(tail -n 3 $report | grep "avg") | awk -F"/" '{print $5}'))
+   los_avg=$(echo -e Loss:$(echo $(tail -n 4 $report | grep "packet loss") | awk '{print $6}') Avg:$(echo $(tail -n 3 $report | grep "avg") | awk -F"/" '{print $5}'))
    echo $'\n' >> $report
    echo "$current_line of $total_line $los_avg Addr: $LINE " >> $sum_report
    echo -e "\033[36m$current_line \033[37mof \033[35m$total_line \033[33m$los_avg \033[32mFinished: $LINE\033[0m"
@@ -49,7 +46,7 @@ echo
 
 # 脚本完成时间，运行总时长统计
 finish_time=`date "+%Y-%m-%d %H:%M:%S"`
-duration=$(echo $(($(date +%s -d "$finish_time")-$(date +%s -d "$start_time"))) | awk '{t=split("60 s 60 m 24 h 999 d",a);for(n=1;n<t;n+=2){if($1==0)break;s=$1%a[n]a[n+1]s;$1=int($1/a[n])}print s}')
+duration=$(echo $(($(date +%s -j -f "+%Y-%m-%d %H:%M:%S" "$finish_time")-$(date +%s -j -f "+%Y-%m-%d %H:%M:%S" "$start_time"))) | awk '{t=split("60 s 60 m 24 h 999 d",a);for(n=1;n<t;n+=2){if($1==0)break;s=$1%a[n]a[n+1]s;$1=int($1/a[n])}print s}')
 
 # 输出时间到文件
 echo Finish Time: $(date) >> $report
