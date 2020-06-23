@@ -1,7 +1,7 @@
 #!/bin/bash
 # 记录开始时间
 start_time=`date "+%Y-%m-%d %H:%M:%S"`
-sleep 2
+sleep 1
 # 脚本开始
 echo
 # 接收命令行变量
@@ -46,7 +46,7 @@ echo
 
 # 脚本完成时间，运行总时长统计
 finish_time=`date "+%Y-%m-%d %H:%M:%S"`
-duration=$(echo $(($(date +%s -j -f "+%Y-%m-%d %H:%M:%S" "$finish_time")-$(date +%s -j -f "+%Y-%m-%d %H:%M:%S" "$start_time"))) | awk '{t=split("60 s 60 m 24 h 999 d",a);for(n=1;n<t;n+=2){if($1==0)break;s=$1%a[n]a[n+1]s;$1=int($1/a[n])}print s}')
+duration=$(echo $(($(date -j -f "%Y-%m-%d %H:%M:%S" "$finish_time" +%s )-$(date -j -f "%Y-%m-%d %H:%M:%S" "$start_time" +%s ))) | awk '{t=split("60 s 60 m 24 h 999 d",a);for(n=1;n<t;n+=2){if($1==0)break;s=$1%a[n]a[n+1]s;$1=int($1/a[n])}print s}')
 
 # 输出时间到文件
 echo Finish Time: $(date) >> $report
