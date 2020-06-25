@@ -32,8 +32,8 @@ current_line=0
 ##
 #### 进行Linux系统 和 MAC OS X的区分运行 ##############################################
 ## GNU/Linux 系统下的运行
-if [ "$(expr substr $(uname -s) 1 5)" = "Linux" ];then
-##
+if [ "$(uname)" = "Linux" ];then
+echo "Running on Linux"
 # 预处理输入文件，将符号^M删掉。Windows和Dos下编辑文件有可能产生这个问题。
 sed -i "s/\x0D//g" $iplist
 ##
@@ -64,7 +64,7 @@ duration=$(echo $(($(date +%s -d "$finish_time")-$(date +%s -d "$start_time"))) 
 ##################################################
 ## Mac OS X 系统下的运行  	
   elif [ "$(uname)" = "Darwin" ];then  
-
+echo "Running on MacOS"
 # 开始处理输入文件内的IP
 echo "## ↓↓↓ $(date) ↓↓↓ ######" >> $sum_report
 echo >> $sum_report
