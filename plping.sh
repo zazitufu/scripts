@@ -46,7 +46,7 @@ do
 	 ((current_line++))
    echo "#### ↓↓↓  $current_line of $total_line ↓↓↓ ##########################################" >> $report
    current_ip=$(echo $LINE | sed 's/\r//' | awk '{print $1}')
-   current_note=$(echo $LINE | sed 's/\r//' |awk '{print $2}')
+   current_note=$(echo $LINE | sed 's/\r//' | awk '{print $2}')
    echo $current_note >> $report
    ping -q -c $runtimes $current_ip | sed '1,2d' >> $report
    los_avg=$(echo -e Loss:$(echo $(tail -n 4 $report | grep -Eo "[0-9]+*%") Avg:$(echo $(tail -n 3 $report | grep "avg") | awk -F"/" '{print $5}')))
