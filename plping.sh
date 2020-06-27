@@ -6,7 +6,7 @@
 # eg: ./plping ipfile 100
 ##
 version=0.1.5
-btime=2020-06-26
+btime=2020-06-27
 # 记录开始时间
 start_time=`date +%s`
 start_time2=$(date)
