@@ -1,11 +1,11 @@
 #!/bin/bash
-# 版本 0.1.6 
+# 版本 0.1.7 
 # 主要update：增加每行IP的进度条。避免在次数多的时候感觉停滞。
 # eg: ./plping ipfile
 # eg: ./plping ipfile 100
 ##
-version=0.1.6
-btime=2020-06-30
+version=0.1.7
+btime=2020-07-01
 # 记录开始时间
 start_time=`date +%s`
 start_time2=$(date)
@@ -72,9 +72,8 @@ do
    current_note=$(echo $LINE | tr -d '\015' |awk '{print $2}')
    echo $current_note >> $report
    processBar &
-   PID=$!
    ping -q -c $runtimes $current_ip | sed '1,2d' >> $report
-   kill $PID
+   { kill $! && wait $!; } 2>/dev/null
    los_avg=$( echo -e Loss:$( tail -n 4 $report |  awk -F"[, ]" -v str="loss" '{v="";for (i=1;i<=NF;i++)  if ($i==str) v=v?"":i;if (v) print $(v-2)}' ) Avg:$( tail -n 3 $report | grep "avg" | awk -F"/" '{print $5}'))
    echo $'\n' >> $report
    echo "$current_line of $total_line $los_avg Addr: $current_ip $current_note " >> $sum_report
