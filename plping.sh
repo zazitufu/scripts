@@ -1,12 +1,11 @@
 #!/bin/bash
-# 版本 0.1.5     2020年6月27日
-# 主要update：各函数使用Linux和Mac OS通用的参数。不再进行系统版本判断。
-# 不再修改源文件处理回车符，改为在内存处理，源文件保持不变。
+# 版本 0.1.6 
+# 主要update：增加每行IP的进度条。避免在次数多的时候感觉停滞。
 # eg: ./plping ipfile
 # eg: ./plping ipfile 100
 ##
-version=0.1.5
-btime=2020-06-27
+version=0.1.6
+btime=2020-06-30
 # 记录开始时间
 start_time=`date +%s`
 start_time2=$(date)
@@ -37,18 +36,45 @@ report=$iplist.logb
 total_line=$(sed -n '$=' $iplist)
 current_line=0
 ##
+### 进度条显。进度按照1秒ping一次计算。
+processBar()
+{
+while [ $process -lt $runtimes ]
+do
+    let process++
+    now=$process
+    all=$runtimes
+    percent=`awk BEGIN'{printf "%f", ('100*$now'/'$all')}'`
+    len=`awk BEGIN'{printf "%d", '$percent'}'`
+    bar='>'
+    for((i=0;i<len/4-1;i++))
+    do
+        bar="="$bar
+    done
+    printf "\e[34m%s \e[37m%s \e[35m%s \e[32m[%-25s]\e[33m[%.2f%%]\e[m\r" $current_line of $total_line $bar $percent
+    sleep 1
+done
+sleep 10
+printf "\n"
+}
+###
 # 开始处理输入文件内的IP
 echo "## ↓↓↓ $start_time2 ↓↓↓ ######" >> $sum_report
 echo >> $sum_report
 echo "Start time: $start_time2" >> $report
+##
 while read LINE  || [[ -n ${LINE} ]] 
 do
 	 ((current_line++))
+	 process=0
    echo "#### ↓↓↓  $current_line of $total_line ↓↓↓ ##########################################" >> $report
    current_ip=$(echo $LINE | tr -d '\015' | awk '{print $1}')
    current_note=$(echo $LINE | tr -d '\015' |awk '{print $2}')
    echo $current_note >> $report
+   processBar &
+   PID=$!
    ping -q -c $runtimes $current_ip | sed '1,2d' >> $report
+   kill $PID
    los_avg=$( echo -e Loss:$( tail -n 4 $report |  awk -F"[, ]" -v str="loss" '{v="";for (i=1;i<=NF;i++)  if ($i==str) v=v?"":i;if (v) print $(v-2)}' ) Avg:$( tail -n 3 $report | grep "avg" | awk -F"/" '{print $5}'))
    echo $'\n' >> $report
    echo "$current_line of $total_line $los_avg Addr: $current_ip $current_note " >> $sum_report
