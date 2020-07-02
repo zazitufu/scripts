@@ -54,7 +54,7 @@ do
     printf "\e[34m%s \e[37m%s \e[35m%s \e[32m[%-25s]\e[33m[%.2f%%]\e[m\r" $current_line of $total_line $bar $percent
     sleep 1
 done
-sleep 10
+sleep 12
 printf "\n"
 }
 ###
