@@ -1,9 +1,10 @@
 # plping   & plmtr     for batch processing IPs from file...
 ---
 ***UPDATE*** 2020-07-02  
-0. This is a Bash script
+
 1. Script can be use on Linux & MacOS X
 2. You can add note after each IP in the ipfile
+3. This is a Bash script
 ---
 Usage:  
 **`plping.sh [filename] [count]  `**   
