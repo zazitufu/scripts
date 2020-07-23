@@ -1,11 +1,12 @@
 #!/bin/bash
-# 版本 0.2.1 
-# 主要update：从原来串行处理，改为多进程并行处理。暂时未限定ip进程数，个人使用不应该用上百个把！？
+# 版本 0.2.4 
+# 主要update：从原来0.1.x版本的串行处理，改为多进程并行处理。暂时未限定ip进程数，个人使用不应该用上百个把！？
+# 次要update：1，格式化输出界面；2,ping的错误信息输出null；3，无法解析的域名，loss用Void标识；4，备注在ip前面显示，方便和情况对照
 # eg: ./plping ipfile
 # eg: ./plping ipfile 100
 ##
-version=0.2.1
-btime=2020-07-02
+version=0.2.4
+btime=2020-07-24
 # 记录开始时间
 start_time=`date +%s`
 start_time2=$(date)
@@ -37,7 +38,6 @@ rm $tmp >/dev/null 2>&1
 ##
 # 统计输入文件的总行数
 total_line=$(sed -n '$=' $iplist)
-current_line=0
 ##
 ### 子shell：进度条显。进度按照1秒ping一次计算。
 processBar()
@@ -65,18 +65,22 @@ goping()
   {
    current_ip=$(echo $LINE | tr -d '\015' | awk '{print $1}')
    current_note=$(echo $LINE | tr -d '\015' |awk '{print $2}')
-   ping -q -W 2 -c $runtimes $current_ip | sed '1,2d; s/---/No:'$current_line' ~~~/ ; s/ping/~ '$current_note' ~~~ ping/'| xargs >> $tmp
+   if [ ! -n "$current_note" ];then current_note=~~~~~~; fi
+   ping -q -W 2 -c $runtimes $current_ip  2>/dev/null | sed '1,2d; s/---/No:'$current_line' ~~~/ ; s/ping/~ '$current_note' ~~~ ping/'| xargs >> $tmp
    }
 ######
 ### 子shell：从输出tmp结果提取信息
 getinfo()
 {
-	 current_ip=$(echo $LINE | tr -d '\015' | awk '{print $1}')
+   current_ip=$(echo $LINE | tr -d '\015' | awk '{print $1}')
    current_note=$(echo $LINE | tr -d '\015' |awk '{print $2}')
-   los_avg=$( echo -e Loss:$( cat $tmp | grep No:"$current_line " | awk -F"[, ]" -v str="loss" '{v="";for (i=1;i<=NF;i++)  if ($i==str) v=v?"":i;if (v) print $(v-2)}' ) Avg:$( cat $tmp | grep No:"$current_line " | grep "avg" | awk -F"/" '{print $5}'))
-   echo "$current_line of $total_line $los_avg Addr: $current_ip $current_note " >> $sum_report
-   echo -e "\033[36m$current_line \033[37mof \033[35m$total_line \033[33m$los_avg \033[32mFinished: \033[36m$current_ip \033[33m$current_note\033[0m"
-} 
+   if [ ! -n "$current_note" ];then current_note=~~~~~~; fi
+   _Loss=~VoiD~
+   _Avg=~~~~~	
+   eval $(cat $tmp | grep No:"$current_line " | awk -F"[/, ]" -v str="loss" -v str2="=" '{v="";for (i=1;i<=NF;i++)  if ($i==str) v=v?"":i;w="";for (k=1;k<=NF;k++)  if ($k==str2) w=w?"":k;if (v) printf("_Loss=%.2f%%; _Avg=%sms" ,$(v-2), $(w+2))}') 
+   printf "%2s of %-2s Loss:%-7s Avg:%-10s %-10s : %-16s\n" $current_line $total_line $_Loss $_Avg $current_note $current_ip >> $sum_report
+   printf "\033[36m%2s \033[37mof \033[35m%-2s \033[33mLoss:%-7s \033[34mAvg:%-10s \033[33m%-10s \033[32m: \033[36m%-16s\033[0m\n" $current_line $total_line $_Loss $_Avg $current_note  $current_ip 
+ } 
 ########### 子shell 定义完毕
 echo "## ↓↓↓ $start_time2 ↓↓↓ ######" >> $sum_report
 echo "## ↓↓↓ $start_time2 ↓↓↓ ######" >> $report
@@ -87,6 +91,7 @@ process=0
 processBar &
 PID=$!
 ### 开始多进程ping处理ip
+current_line=0
 while read LINE  || [[ -n ${LINE} ]] 
 do
 	 ((current_line++))
@@ -105,7 +110,7 @@ done < $iplist
 echo
 ### 将临时文件整理并输出到detail文件，然后删除临时文件。
 cat tmp.plpingtmp | sed "$(printf 's/$/\\\n/');$(printf 's/---/\\\n/');$(printf 's/loss/loss\\\n/')" >> $report
-#rm $tmp >/dev/null 2>&1
+rm $tmp >/dev/null 2>&1
 ##
 # 脚本完成时间，运行总时长统计
 finish_time=`date +%s`
