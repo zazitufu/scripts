@@ -1,12 +1,13 @@
 #!/bin/bash
-# 版本 0.1.2     2020年6月26日
-# 主要update：各函数使用Linux和Mac OS通用的参数。不再进行系统版本判断。
-# 不再修改源文件处理回车符，改为在内存处理，源文件保持不变。
+# 版本 0.2.4     2020年7月27日 22点23分
+# 主要update：配合使用nali做管道，输出各ip的geo信息。nali命令是否存在都可以执行。
+# nali使用的版本：https://github.com/zu1k/nali。下载后应该首先使用nali update进行ip库下载。
+# 注意事项：nali 无论用什么版本，命令行应该alias为nali
 # eg: sudo ./plmtr ipfile
 # eg: sudo ./plmtr ipfile 100
 ##
-version=0.1.2
-btime=2020-06-26
+version=0.2.4
+btime=2020-07-27
 # 记录开始时间
 start_time=`date +%s`
 sleep 1
@@ -39,13 +40,17 @@ current_line=0
 while read LINE  || [[ -n ${LINE} ]]
 do
    ((current_line++))
-   current_ip=$(echo $LINE | sed 's/\r//' | awk '{print $1}')
-   current_note=$(echo $LINE | sed 's/\r//' |awk '{print $2}')
+   current_ip=$(echo $LINE | tr -d '\015' | awk '{print $1}')
+   current_note=$(echo $LINE | tr -d '\015'  |awk '{print $2}')
    echo "### ↓↓↓  $current_line of $total_line ↓↓↓ ### | ###### $(date) ######" >> $report
    echo "Note:$current_note    IP/Domain: $current_ip" >> $report
-   mtr -r -c $runtimes $current_ip | sed '1d' >> $report
+ if command -v nali >/dev/null 2>&1 ;then
+   mtr -r -c $runtimes $current_ip 2>/dev/null | sed '1d' | awk '{printf "~%6s~%6s~%6s~%6s~%6s~%6s~%6s~%5s~%-15s\n",$1, $3, $4, $5, $6, $7, $8, $9, $2}'  | nali | awk -F '[]~[]' '{printf "%6s%-16s%6s%6s%6s%6s%6s%6s %5s %-5s\n",$2, $10,$3, $4, $5, $6, $7, $8,$9, $11}' >> $report
+   else
+   mtr -r -c $runtimes $current_ip 2>/dev/null | sed '1d' >> $report
+ fi
    echo $'\n'>> $report
-   echo -e "\033[36m$current_line \033[37mof \033[35m$total_line \033[32mFinished: \033[36m$current_ip \033[33m$current_note\033[0m"
+   printf "\033[36m%2s \033[37mof \033[35m%2s \033[32mFinished: \033[36m%-16s\033[33m%-10s\033[0m\n" $current_line $total_line $current_ip $current_note
 done < $iplist
 echo
 ### 脚本运行时长计算
