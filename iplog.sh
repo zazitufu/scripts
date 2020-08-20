@@ -11,7 +11,7 @@ fi
 last_ip=$(tail -n 1 $reportfile|awk -F"[ ：]" '{print $7}')
 c_ip=$(curl myip.ipip.net |sed -e "s/^/$(date "+%Y-%m-%d %H:%M:%S") /" )
 n_ip=$(echo $c_ip|awk -F"[ ：]" '{print $7}')
-if [ ! -n "$c_ip" ] && [ "$last_ip" != "$n_ip" ];then
+if [ -n "$c_ip" ] && [ "$last_ip" != "$n_ip" ];then
 	echo $c_ip >> $reportfile
 fi 
 echo Check Time: $(date "+%Y-%m-%d %H:%M:%S") >> $reportfile
