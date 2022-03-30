@@ -8,6 +8,7 @@ read -p "Input SSH port:" sshport
 
 cat << EOF > /etc/fail2ban/jail.local
 [DEFAULT]
+ignoreip = 127.0.0.1/8 ::1
 bantime  = -1
 findtime  = 60m
 maxretry = 4
