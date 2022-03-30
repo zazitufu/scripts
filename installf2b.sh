@@ -3,9 +3,9 @@
 ##
 apt update
 apt-get -y install fail2ban iptables
-
+echo 
 read -p "Input SSH port:" sshport
-
+echo 
 cat << EOF > /etc/fail2ban/jail.local
 [DEFAULT]
 ignoreip = 127.0.0.1/8 ::1
