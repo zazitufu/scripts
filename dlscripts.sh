@@ -10,8 +10,9 @@ scriptfile=(
 	publish.sh
 	traffic.sh
 	testip.sh
-  dlscripts.sh
-  lastbcount.sh
+	dlscripts.sh
+	lastbcount.sh
+	installf2b.sh
 	)
 for filename in ${scriptfile[@]}
 do
