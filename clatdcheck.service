@@ -1,0 +1,16 @@
+### 用来开机自动运行clatdcheck.sh，作用是保障clatd.service的正常运行
+[Unit]
+Description=My Script Service
+After=clatd.target
+
+[Service]
+User=root
+Group=root
+Type=simple
+ExecStartPre=/bin/bash -c "sleep 30"
+ExecStart=/bin/bash -c "/aabin/clatdcheck.sh"
+Restart=always
+RestartSec=5m
+
+[Install]
+WantedBy=multi-user.target
