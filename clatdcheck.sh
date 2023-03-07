@@ -36,7 +36,7 @@ while true
 do
     if check_service; then
         # 如果服务正常，删除log文件中最后一次成功的记录
-        sed -i '/Service is running normally/d' $log_file
+        sed -i '${/Service is running normally/d;}' $log_file
         log "Service is running normally"
 
     else
