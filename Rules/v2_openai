@@ -1,0 +1,29 @@
+# /etc/v2ray/conf/routing_openai.json
+{
+        "routing": {
+                "rules": [
+                        {
+                        "outboundTag": "parscw",
+                        "type": "field",
+                        "domain": [
+                                "domain:openai",
+                                "domain:auth0.com",
+                                "domain:challenges.cloudflare.com",
+                                "domain:client-api.arkoselabs.com",
+                                "domain:events.statsigapi.net",
+                                "domain:featuregates.org",
+                                "domain:identrust.com",
+                                "domain:intercom.io",
+                                "domain:intercomcdn.com",
+                                "domain:openai.com",
+                                "domain:openaiapi-site.azureedge.net",
+                                "domain:statsigapi.net",
+                                "domain:sentry.io",
+                                "domain:oaistatic.com",
+                                "domain:oaiusercontent.com",
+                                "domain:statsig.com"
+                                ]
+                }
+                ]
+        }
+}
