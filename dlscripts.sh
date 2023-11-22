@@ -13,6 +13,7 @@ scriptfile=(
 	dlscripts.sh
 	lastbcount.sh
 	installf2b.sh
+ 	bns.sh
 	)
 for filename in ${scriptfile[@]}
 do
