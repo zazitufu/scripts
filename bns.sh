@@ -1,5 +1,5 @@
 #!/bin/bash
-# 2023年11月22日，v 0.0.1
+# 2023年11月23日，v 0.0.2
 # Backup and restore 此脚本用来快速打包备份准备重装系统后需要复用的文件。
 # 不展开到绝对路径，而是当前路径下： tar -xzvf filename --strip-components=1
 
@@ -18,7 +18,7 @@ files_to_backup=(
 
 # 函数：备份文件
 backup_files() {
-    echo "输入要创建的备份文件的名称（包括路径）:"
+    echo "输入要创建的备份文件的名称（默认在当前路径）:"
     read backup_filename
 
     # 动态展开通配符并创建文件列表
@@ -42,7 +42,7 @@ backup_files() {
 
 # 函数：恢复文件
 restore_files() {
-    echo "输入要恢复的备份文件的名称（包括路径）:"
+    echo "输入要恢复的备份文件的名称（默认在当前路径）:"
     read backup_filename
 
     # 检查文件是否存在
@@ -51,8 +51,25 @@ restore_files() {
         return
     fi
 
-    # 解压备份文件
-    tar -xzvf "$backup_filename" -C /
+    echo "选择恢复方式:"
+    echo "1) 按原路径恢复"
+    echo "2) 恢复到当前路径下"
+    read -p "输入选择 (1或2): " restore_choice
+
+    case $restore_choice in
+        1)
+            # 按原路径恢复
+            tar -xzvf "$backup_filename" -C /
+            ;;
+        2)
+            # 恢复到当前路径下
+            tar -xzvf "$backup_filename" --strip-components=1
+            ;;
+        *)
+            echo "无效的选择。"
+            return
+            ;;
+    esac
 
     echo "恢复完成。已恢复的文件:"
     tar -tf "$backup_filename"
