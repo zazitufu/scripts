@@ -1,12 +1,12 @@
 #!/bin/bash
-# 版本 0.2.4 
+# 版本 0.2.5 
 # 主要update：从原来0.1.x版本的串行处理，改为多进程并行处理。暂时未限定ip进程数，个人使用不应该用上百个把！？
-# 次要update：1，格式化输出界面；2,ping的错误信息输出null；3，无法解析的域名，loss用Void标识；4，备注在ip前面显示，方便和情况对照
+# 次要update：1，格式化输出界面；2,ping的错误信息输出null；3，无法解析的域名，loss用Void标识；4，备注在ip前面显示，方便和情况对照; 5,增加mdev數據
 # eg: ./plping ipfile
 # eg: ./plping ipfile 100
 ##
-version=0.2.4
-btime=2020-07-24
+version=0.2.5
+btime=2023-11-25
 # 记录开始时间
 start_time=`date +%s`
 start_time2=$(date)
@@ -23,7 +23,7 @@ if [ ! -f "$iplist" ] && [ ! -n "$runtimes" ];then
   echo "Version: $version   Built: $btime"
 exit
 elif [ ! -n "$runtimes" ];then
-	runtimes=10
+    runtimes=10
 fi
 echo
 echo "O(∩_∩)O Relax... Take a cup of coffee? tea?   Not me !!!"
@@ -76,10 +76,11 @@ getinfo()
    current_note=$(echo $LINE | tr -d '\015' |awk '{print $2}')
    if [ ! -n "$current_note" ];then current_note=~~~~~~; fi
    _Loss=~VoiD~
-   _Avg=~~~~~	
-   eval $(cat $tmp | grep No:"$current_line " | awk -F"[/, ]" -v str="loss" -v str2="=" '{v="";for (i=1;i<=NF;i++)  if ($i==str) v=v?"":i;w="";for (k=1;k<=NF;k++)  if ($k==str2) w=w?"":k;if (v) printf("_Loss=%.2f%%; _Avg=%sms" ,$(v-2), $(w+2))}') 
-   printf "%2s of %-2s Loss:%-7s Avg:%-10s %-10s : %-16s\n" $current_line $total_line $_Loss $_Avg $current_note $current_ip >> $sum_report
-   printf "\033[36m%2s \033[37mof \033[35m%-2s \033[33mLoss:%-7s \033[34mAvg:%-10s \033[33m%-10s \033[32m: \033[36m%-16s\033[0m\n" $current_line $total_line $_Loss $_Avg $current_note  $current_ip 
+   _Avg=~~~~~   
+   _Mdev=~~~~~
+   eval $(cat $tmp | grep No:"$current_line " | awk -F"[/, ]" -v str="loss" -v str2="=" '{v="";for (i=1;i<=NF;i++)  if ($i==str) v=v?"":i;w="";for (k=1;k<=NF;k++)  if ($k==str2) w=w?"":k;if (v) printf("_Loss=%.2f%%; _Avg=%sms; _Mdev=%sms" ,$(v-2), $(w+2), $(w+4))}') 
+   printf "%2s of %-2s Loss:%-7s Avg:%-10s Mdev:%-10s %-10s : %-16s\n" $current_line $total_line $_Loss $_Avg $_Mdev $current_note $current_ip >> $sum_report
+   printf "\033[36m%2s \033[37mof \033[35m%-2s \033[33mLoss:%-7s \033[34mAvg:%-10s \033[36mMdev:%-10s \033[33m%-10s \033[32m: \033[36m%-16s\033[0m\n" $current_line $total_line $_Loss $_Avg $_Mdev $current_note  $current_ip 
  } 
 ########### 子shell 定义完毕
 echo "## ↓↓↓ $start_time2 ↓↓↓ ######" >> $sum_report
@@ -94,7 +95,7 @@ PID=$!
 current_line=0
 while read LINE  || [[ -n ${LINE} ]] 
 do
-	 ((current_line++))
+     ((current_line++))
    goping &
 done < $iplist
 wait
@@ -103,7 +104,7 @@ sort -t : -k 2 -n tmp.plpingtmp -o tmp.plpingtmp #将临时文件进行排序并
 current_line=0
 while read LINE  || [[ -n ${LINE} ]] 
 do
-	 ((current_line++))
+     ((current_line++))
    getinfo
 done < $iplist
 { kill $PID && wait $PID; } 2>/dev/null
@@ -120,7 +121,7 @@ duration=$(echo $(( finish_time - start_time )) | awk '{t=split("60 s 60 m 24 h 
 echo "Finish Time: $(date)" >> $report
 echo "Duration of this script: $duration" >> $report
 echo -e "\n" >> $report
-echo >> $sum_report	
+echo >> $sum_report 
 echo "Duration of this script: $duration   Count: $runtimes" >> $sum_report
 echo -e "\n" >> $sum_report
 # 输出运行用时到屏幕
