@@ -1,30 +1,46 @@
 #!/bin/bash
-# 版本 0.2.6 
-# 主要update：从原来0.1.x版本的串行处理，改为多进程并行处理。暂时未限定ip进程数，个人使用不应该用上百个把！？
-# 次要update：1，格式化输出界面；2,ping的错误信息输出null；3，无法解析的域名，loss用Void标识；4，备注在ip前面显示，方便和情况对照; 5,增加mdev數據
+# 版本 0.3.1 
+# 主要update： 运行命令更改，增加一个可选参数tag，作为不同线路时候标注使用。本人还是建议不同线路使用不同文件名，这样log才清晰可分辨。
 # eg: ./plping ipfile
-# eg: ./plping ipfile 100
+# eg: ./plping ipfile -c 100 -t tag
 ##
-version=0.2.6
-btime=2023-11-25
+version=0.3.1
+btime=2023-11-28
 # 记录开始时间
 start_time=`date +%s`
 start_time2=$(date)
 sleep 1
 # 脚本开始
+# 初始化默认值
+runtimes=10
+tag=""
 # 接收命令行变量
-runtimes=$2
-iplist=$1
-##
-# 判断是否有输入文件名和运行次数
-if [ ! -f "$iplist" ] && [ ! -n "$runtimes" ];then
-  echo
-  echo "Example: plping [filename] [count] (default count = 10)"
-  echo "Version: $version   Built: $btime"
-exit
-elif [ ! -n "$runtimes" ];then
-    runtimes=10
+# 检查至少有一个参数（文件名）
+if [ $# -lt 1 ]; then
+  echo "Usage: $0 iplist [-c count] [-t tag]"
+  exit 1
 fi
+
+# 第一个参数是文件名
+iplist=$1
+shift # 移除第一个参数，以便处理剩下的参数
+
+# 检查文件是否存在
+if [ ! -f "$iplist" ]; then
+  echo "Error: File '$iplist' not found."
+  exit 1
+fi
+
+# 使用getopts解析命令行参数
+while getopts "c:t:" opt; do
+  case $opt in
+    c) runtimes=$OPTARG ;; # 设置次数
+    t) tag=$OPTARG   ;; # 设置标签
+    \?) echo "Usage: $0 iplist [-c count] [-t tag]"
+        echo "Version: $version   Built: $btime"
+        exit 1 ;;
+  esac
+done
 echo
 echo "O(∩_∩)O Relax... Take a cup of coffee? tea?   Not me !!!"
 echo "Version: $version   Built: $btime"
@@ -33,6 +49,7 @@ echo "Version: $version   Built: $btime"
 sum_report=$iplist.log
 report=$iplist.logb
 tmp=tmp.plpingtmp
+
 ### 避免上次中断产生临时文件存在，影响本次运行结果查询，先删除一次。
 rm $tmp >/dev/null 2>&1
 ##
@@ -82,9 +99,20 @@ getinfo()
    printf "%2s of %-2s Loss:%-7s Avg:%-10s Mdev:%-10s %-18s : %-16s\n" $current_line $total_line $_Loss $_Avg $_Mdev $current_note $current_ip >> $sum_report
    printf "\033[36m%2s \033[37mof \033[35m%-2s \033[33mLoss:%-7s \033[34mAvg:%-10s \033[36mMdev:%-10s \033[33m%-18s \033[32m: \033[36m%-16s\033[0m\n" $current_line $total_line $_Loss $_Avg $_Mdev $current_note  $current_ip 
  } 
+### 子shell：tag是否有输入
+gotag()
+{
+    if [ -z "$tag" ]; then
+        echo ""
+    else
+        echo "$tag"
+    fi
+}
 ########### 子shell 定义完毕
-echo "## ↓↓↓ $start_time2 ↓↓↓ ######" >> $sum_report
-echo "## ↓↓↓ $start_time2 ↓↓↓ ######" >> $report
+
+checktag=$(gotag)
+echo "## ↓↓↓ $start_time2 ↓↓↓ ######    File:$iplist      Tag:$checktag " >> $sum_report
+echo "## ↓↓↓ $start_time2 ↓↓↓ ######    File:$iplist      Tag:$checktag " >> $report
 echo >> $sum_report
 echo >> $report
 ##
@@ -128,5 +156,10 @@ echo -e "\n" >> $sum_report
 echo -e "\033[34mFinish Time:\033[0m $(date)"
 echo -e "\033[34mOutput File:\033[0m $sum_report   \033[34mDetail File:\033[0m $report"
 echo -e "\033[34mDuration of this script: \033[0m$duration    \033[34mCount: \033[0m$runtimes" 
+if [ -n "$checktag" ]; then
+    echo -e "\033[34mTag: \033[0m$checktag "
+else
+    echo "" 
+fi
 echo
 # 脚本完结撒花 O(∩_∩)O
