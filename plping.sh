@@ -1,14 +1,15 @@
 #!/bin/bash
-# 版本: 0.3.3 
-# Date:2023-11-29
+# 版本: 0.4.1 
+# Date:2023-11-29 02:45
 # https://github.com/zazitufu/scripts/blob/master/plping.sh
-# 主要update： 运行命令更改，增加一个可选参数tag，作为不同线路时候标注使用。本人还是建议不同线路使用不同文件名，这样log才清晰可分辨。
 # eg: ./plping ipfile
 # eg: ./plping ipfile -c 100 -t tag
+# eg：./plping ipfile1 ipfile2 ipfile3 ... -c 5 -t tag
+# eg: ./plping ipfile* -c 3 -t tag
 # ipfile 格式：每行一个ip/domain ，如果有备注就在ip/domain后先加空格再写。
 # ipfile 例： 1.1.1.1 cloudflare
 ##
-version=0.3.3
+version=0.4.1
 btime=2023-11-29
 # 记录开始时间
 start_time=`date +%s`
@@ -19,33 +20,59 @@ sleep 1
 runtimes=10
 tag=""
 # 接收命令行变量
-# 检查至少有一个参数（文件名）
-if [ $# -lt 1 ]; then
-  echo "Usage: $0 iplist [-c count (default = 10)] [-t tag]"
-    echo "Version: $version   Built: $btime"
-  exit 1
-fi
+# 创建一个数组来存储文件名
+declare -a files
 
-# 第一个参数是文件名
-iplist=$1
-shift # 移除第一个参数，以便处理剩下的参数
+# 正则表达式，用于匹配 IP 地址和域名
+ip_regex="^([0-9]{1,3}\.){3}[0-9]{1,3}$"
+domain_regex="^([a-zA-Z0-9]([-a-zA-Z0-9]*[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$"
 
-# 检查文件是否存在
-if [ ! -f "$iplist" ]; then
-  echo "Error: File '$iplist' not found."
-  exit 1
-fi
-
-# 使用getopts解析命令行参数
-while getopts "c:t:" opt; do
-  case $opt in
-    c) runtimes=$OPTARG ;; # 设置次数
-    t) tag=$OPTARG   ;; # 设置标签
-    \?) echo "Usage: $0 iplist [-c count] [-t tag]"
-        echo "Version: $version   Built: $btime"
-        exit 1 ;;
+# 手动解析命令行参数
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -c)
+      runtimes=$2
+      shift # 移过值
+      ;;
+    -t)
+      tag=$2
+      shift # 移过值
+      ;;
+    *) # 不是选项参数，视为文件名
+      files+=("$1")
+      ;;
   esac
+  shift # 移过参数
 done
+
+# 检查是否提供了文件名
+if [ ${#files[@]} -eq 0 ]; then
+    echo "Error: No file specified."
+    exit 1
+fi
+
+# 处理每个文件
+for iplist in "${files[@]}"; do
+    # 检查文件是否存在
+    if [ ! -f "$iplist" ]; then
+        echo "Warning: File '$iplist' not found, skipping."
+        continue
+    fi
+
+    # 检查文件名是否包含 ".log"
+    if [[ $iplist == *".log"* ]]; then
+     #   echo "Skipping file '$iplist' as it contains '.log'."
+        continue
+    fi
+
+    # 读取文件的第一行的第一列
+    first_column=$(head -n 1 "$iplist" | awk '{print $1}')
+
+    # 检查第一列是否为 IP 地址或域名
+    if [[ $first_column =~ $ip_regex ]] || [[ $first_column =~ $domain_regex ]]; then
+    #    echo
+    #    echo "Processing file '$iplist' for $runtimes times with Tag '$tag'"
+    # ... 处理每个文件的其他代码 ...
 echo
 echo "O(∩_∩)O Relax... Take a cup of coffee? tea?   Not me !!!"
 echo "Version: $version   Built: $btime"
@@ -158,4 +185,8 @@ else
     echo "" 
 fi
 echo
+    else
+        echo "Skipping file '$iplist': First column is not an IP or domain."
+    fi
+done
 # 脚本完结撒花 O(∩_∩)O
