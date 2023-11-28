@@ -1,11 +1,10 @@
 #!/bin/bash
-# 版本 0.3.1 
 # 主要update： 运行命令更改，增加一个可选参数tag，作为不同线路时候标注使用。本人还是建议不同线路使用不同文件名，这样log才清晰可分辨。
 # eg: ./plping ipfile
 # eg: ./plping ipfile -c 100 -t tag
 ##
-version=0.3.1
-btime=2023-11-28
+version=0.3.2
+btime=2023-11-29
 # 记录开始时间
 start_time=`date +%s`
 start_time2=$(date)
@@ -17,7 +16,8 @@ tag=""
 # 接收命令行变量
 # 检查至少有一个参数（文件名）
 if [ $# -lt 1 ]; then
-  echo "Usage: $0 iplist [-c count] [-t tag]"
+  echo "Usage: $0 iplist [-c count (default = 10)] [-t tag]"
+    echo "Version: $version   Built: $btime"
   exit 1
 fi
 
@@ -111,8 +111,8 @@ gotag()
 ########### 子shell 定义完毕
 
 checktag=$(gotag)
-echo "## ↓↓↓ $start_time2 ↓↓↓ ######    File:$iplist      Tag:$checktag " >> $sum_report
-echo "## ↓↓↓ $start_time2 ↓↓↓ ######    File:$iplist      Tag:$checktag " >> $report
+echo -e "$checktag \n## ↓↓↓ $start_time2 ↓↓↓ ######    File:$iplist" >> $sum_report
+echo -e "$checktag \n## ↓↓↓ $start_time2 ↓↓↓ ######    File:$iplist" >> $report
 echo >> $sum_report
 echo >> $report
 ##
