@@ -1,15 +1,13 @@
 #!/bin/bash
-# 版本: 0.4.1 
-# Date:2023-11-29 02:45
+# 版本: 0.4.2 
+# Date:2023-11-29
 # https://github.com/zazitufu/scripts/blob/master/plping.sh
-# eg: ./plping ipfile
-# eg: ./plping ipfile -c 100 -t tag
-# eg：./plping ipfile1 ipfile2 ipfile3 ... -c 5 -t tag
-# eg: ./plping ipfile* -c 3 -t tag
+# eg: ./plping ipfile1 ipfile2 ipfile3 ... -c 42 -t tag
+# eg: ./plping ipfile* 
 # ipfile 格式：每行一个ip/domain ，如果有备注就在ip/domain后先加空格再写。
 # ipfile 例： 1.1.1.1 cloudflare
 ##
-version=0.4.1
+version=0.4.2
 btime=2023-11-29
 # 记录开始时间
 start_time=`date +%s`
@@ -47,7 +45,14 @@ done
 
 # 检查是否提供了文件名
 if [ ${#files[@]} -eq 0 ]; then
-    echo "Error: No file specified."
+  echo
+  echo " Version: $version   Built: $btime"
+  echo
+cat << EOF
+ Eg1: ./plping ipfile [filename] [-c count (default = 10)] [-t tag]
+ Eg2：./plping ipfile1 ipfile2 ipfile3 ... -c 42 -t tag
+ Eg3: ./plping ipfile* -c 42
+EOF
     exit 1
 fi
 
