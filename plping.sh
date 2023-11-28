@@ -1,9 +1,14 @@
 #!/bin/bash
+# 版本: 0.3.3 
+# Date:2023-11-29
+# https://github.com/zazitufu/scripts/blob/master/plping.sh
 # 主要update： 运行命令更改，增加一个可选参数tag，作为不同线路时候标注使用。本人还是建议不同线路使用不同文件名，这样log才清晰可分辨。
 # eg: ./plping ipfile
 # eg: ./plping ipfile -c 100 -t tag
+# ipfile 格式：每行一个ip/domain ，如果有备注就在ip/domain后先加空格再写。
+# ipfile 例： 1.1.1.1 cloudflare
 ##
-version=0.3.2
+version=0.3.3
 btime=2023-11-29
 # 记录开始时间
 start_time=`date +%s`
@@ -99,20 +104,11 @@ getinfo()
    printf "%2s of %-2s Loss:%-7s Avg:%-10s Mdev:%-10s %-18s : %-16s\n" $current_line $total_line $_Loss $_Avg $_Mdev $current_note $current_ip >> $sum_report
    printf "\033[36m%2s \033[37mof \033[35m%-2s \033[33mLoss:%-7s \033[34mAvg:%-10s \033[36mMdev:%-10s \033[33m%-18s \033[32m: \033[36m%-16s\033[0m\n" $current_line $total_line $_Loss $_Avg $_Mdev $current_note  $current_ip 
  } 
-### 子shell：tag是否有输入
-gotag()
-{
-    if [ -z "$tag" ]; then
-        echo ""
-    else
-        echo "$tag"
-    fi
-}
-########### 子shell 定义完毕
 
-checktag=$(gotag)
-echo -e "$checktag \n## ↓↓↓ $start_time2 ↓↓↓ ######    File:$iplist" >> $sum_report
-echo -e "$checktag \n## ↓↓↓ $start_time2 ↓↓↓ ######    File:$iplist" >> $report
+########### 子shell 定义完毕
+## 输入本次信息到log和logb
+echo -e "$tag \n## ↓↓↓ $start_time2 ↓↓↓ ######    File:$iplist" >> $sum_report
+echo -e "$tag \n## ↓↓↓ $start_time2 ↓↓↓ ######    File:$iplist" >> $report
 echo >> $sum_report
 echo >> $report
 ##
@@ -156,8 +152,8 @@ echo -e "\n" >> $sum_report
 echo -e "\033[34mFinish Time:\033[0m $(date)"
 echo -e "\033[34mOutput File:\033[0m $sum_report   \033[34mDetail File:\033[0m $report"
 echo -e "\033[34mDuration of this script: \033[0m$duration    \033[34mCount: \033[0m$runtimes" 
-if [ -n "$checktag" ]; then
-    echo -e "\033[34mTag: \033[0m$checktag "
+if [ -n "$tag" ]; then
+    echo -e "\033[34mTag: \033[0m$tag "
 else
     echo "" 
 fi
