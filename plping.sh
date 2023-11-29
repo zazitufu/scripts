@@ -1,13 +1,13 @@
 #!/bin/bash
-# 版本: 0.4.2 
+# 版本: 0.4.3 
 # Date:2023-11-29
 # https://github.com/zazitufu/scripts/blob/master/plping.sh
-# eg: ./plping ipfile1 ipfile2 ipfile3 ... -c 42 -t tag
-# eg: ./plping ipfile* 
+# eg: ./plping.sh ipfile1 ipfile2 ipfile3 ... -c 42 -t tag
+# eg: ./plping.sh ipfile* 
 # ipfile 格式：每行一个ip/domain ，如果有备注就在ip/domain后先加空格再写。
 # ipfile 例： 1.1.1.1 cloudflare
 ##
-version=0.4.2
+version=0.4.3
 btime=2023-11-29
 # 记录开始时间
 start_time=`date +%s`
@@ -46,12 +46,18 @@ done
 # 检查是否提供了文件名
 if [ ${#files[@]} -eq 0 ]; then
   echo
-  echo " Version: $version   Built: $btime"
+  echo "Version: $version   Built: $btime"
   echo
 cat << EOF
- Eg1: ./plping ipfile [filename] [-c count (default = 10)] [-t tag]
- Eg2：./plping ipfile1 ipfile2 ipfile3 ... -c 42 -t tag
- Eg3: ./plping ipfile* -c 42
+Eg1: plping.sh [filename] [-c count (default = 10)] [-t tag]
+Eg2: plping.sh ipfile1 ipfile2 ipfile3 ... -c 42 -t tag
+Eg3: plping.sh -c 42 ipfile*
+
+IPfile eg:
+1.1.1.1 cfdns
+8.8.8.8 
+google.com what
+
 EOF
     exit 1
 fi
