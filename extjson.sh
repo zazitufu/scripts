@@ -1,12 +1,14 @@
 # 用来提取json文件内不同数组里的不同元素
 # 默认提取outbounds里的第一个元素，-n 为提取其它数组名称， -e 数值0，则提取数组内所有元素，数值1，则提取数组内第一个元素，以此类推。
 # https://github.com/zazitufu/scripts/blob/master/extjson.sh
-# 版本：0.0.2
+# 版本：0.0.3
 # 时间：2023年12月4日
 #!/bin/bash
+
 ##
-version=0.0.2
+version=0.0.3
 btime=2023-12-04
+
 # 初始化默认值
 ELEMENT_INDEX=0
 ARRAY_NAME="outbounds"
@@ -46,9 +48,9 @@ if [ -z "$JSON_FILE" ]; then
     echo "Version: $version   Built: $btime"
     echo
     echo "Usage: $0 [-n array-name] [-e element-index] <json-file>"
-    echo 'eg: extjson.sh jsonfile       # extract the 1st element in array "outbounds"'
-    echo 'eg: extjson.sh jsonfile -e 1  # extract the 1st element in array "outbounds"'
-    echo 'eg: extjson.sh jsonfile -n inbounds -e 0  # extract all element in array "inbounds"'
+    echo -e 'eg: extjson.sh jsonfile                   # extract the 1st element in array "outbounds"'
+    echo -e 'eg: extjson.sh jsonfile -e 1              # extract the 1st element in array "outbounds"'
+    echo -e 'eg: extjson.sh jsonfile -n inbounds -e 0  # extract all element in array "inbounds"'
     echo
     exit 1
 fi
