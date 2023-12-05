@@ -16,6 +16,8 @@ scriptfile=(
     installf2b.sh
     bns.sh
     extjson.sh
+    enano.sh
+    set_alias.sh
 )
 
 base_url="https://raw.githubusercontent.com/zazitufu/scripts/master"
