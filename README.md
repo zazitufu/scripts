@@ -22,9 +22,9 @@ eg：
 **`sudo ./plmtr.sh ipfile -c 100 -t tag1`**
 
 The iplist file should be one IP/DOMAIN each line  
-```
-cat ipfile  
 
+**`cat ipfile `**   
+```
 192.168.123.1 local
 114.114.114.114 DNS-CN
 www.google.com Website
@@ -33,7 +33,7 @@ www.baidu.com CN
 ```
 ---
 eg:
-`plping ipfile -c 15`
+`./plping.sh ipfile -c 15`
 
 Prompt display
 ```ubuntu
@@ -45,7 +45,7 @@ Total-IPs: 5 [=================================================>][100.00%]
  5 of 5  Loss:0.00%   Avg:149.729ms  Mdev:0.676ms    ~~~~~~             : 1.1.1.1         
 
 Finish Time: Tue Dec  5 17:06:55 CST 2023
-Output File: i2.log   Detail File: i2.logb
+Output File: ipfile.log   Detail File: ipfile.logb
 Duration of this script: 19s    Count: 15
 
 ```
