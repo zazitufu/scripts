@@ -1,7 +1,9 @@
 ### 用来开机自动运行clatdcheck.sh，作用是保障clatd.service的正常运行
 [Unit]
 Description=My Script Service
-After=clatd.target
+After=network.target
+After=sshd.service
+After=clatd.service
 
 [Service]
 User=root
