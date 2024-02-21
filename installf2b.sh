@@ -14,6 +14,8 @@ ignoreip = 127.0.0.1/8 ::1 $ignoreip
 bantime  = -1
 findtime  = 60m
 maxretry = 4
+backend = systemd
+
 [sshd]
 enabled = true
 port    = ssh,$sshport
