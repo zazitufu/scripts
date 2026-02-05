@@ -18,6 +18,7 @@ scriptfile=(
     extjson.sh
     enano.sh
     set_alias.sh
+    setvps.sh
 )
 
 base_url="https://raw.githubusercontent.com/zazitufu/scripts/master"
