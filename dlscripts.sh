@@ -19,6 +19,7 @@ scriptfile=(
     enano.sh
     set_alias.sh
     setvps.sh
+    setvps.conf
 )
 
 base_url="https://raw.githubusercontent.com/zazitufu/scripts/master"
