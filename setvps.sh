@@ -1,15 +1,23 @@
 #!/bin/bash
-#VPS 环境自动化配置工具
-#v 0.1
-#https://github.com/zazitufu/scripts/new/master
-#2026年2月6日，00点26分
+# VPS 环境自动化配置工具
+# v 0.2 - 优化版
+# https://github.com/zazitufu/scripts/new/master
+# 2026 年 3 月 22 日 - 增加更换源子菜单、修复菜单显示问题
+
 # 定义文件名
 CONFIG_FILE="setvps.conf"
+
+# 颜色定义
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
 
 # 1. 检查并生成示例配置文件
 if [ ! -f "$CONFIG_FILE" ]; then
     echo "----------------------------------------------------"
-    echo "错误: 未找到配置文件 $CONFIG_FILE"
+    echo -e "${RED}错误：${NC}未找到配置文件 $CONFIG_FILE"
     echo "正在为你生成示例配置文件..."
     
     # 生成 JSON 内容
@@ -41,8 +49,8 @@ if [ ! -f "$CONFIG_FILE" ]; then
 }
 EOF
     echo "----------------------------------------------------"
-    echo "成功: 示例文件已创建在当前目录。"
-    echo "提示: 请先使用 'nano $CONFIG_FILE' 或 'vi $CONFIG_FILE' 编辑配置。"
+    echo -e "${GREEN}成功：${NC}示例文件已创建在当前目录。"
+    echo -e "${YELLOW}提示：${NC}请先使用 'nano $CONFIG_FILE' 或 'vi $CONFIG_FILE' 编辑配置。"
     echo "      根据你的 VPS 系统修改对应的安装命令。"
     echo "----------------------------------------------------"
     exit 1
@@ -65,47 +73,30 @@ fi
 TITLE=$(jq -r '.menu_title' "$CONFIG_FILE")
 ITEM_COUNT=$(jq '.items | length' "$CONFIG_FILE")
 
-# 清屏增加美感
-clear
-echo "===================================================="
-echo "    $TITLE"
-echo "===================================================="
-
-# 4. 构建菜单选项
-# 第一项为全量安装
-options=("【一键安装所有项目】")
-for i in $(seq 0 $((ITEM_COUNT - 1))); do
-    name=$(jq -r ".items[$i].name" "$CONFIG_FILE")
-    desc=$(jq -r ".items[$i].desc" "$CONFIG_FILE")
-    options+=("$name ($desc)")
-done
-options+=("退出脚本")
-
-# 5. 执行函数
+# 4. 执行函数
 execute_task() {
     local idx=$1
     # 获取任务名称
     local name=$(jq -r ".items[$idx].name" "$CONFIG_FILE")
     
-    echo -e "\n\033[32m[开始执行]\033[0m: $name"
+    echo -e "\n${GREEN}[开始执行]${NC}: $name"
 
     # 1. 关键点：获取 command 的类型 (string 或 array)
     local cmd_type=$(jq -r ".items[$idx].command | type" "$CONFIG_FILE")
 
     if [ "$cmd_type" == "array" ]; then
         # 2. 如果是数组，使用 jq 的 -c 参数逐行读取纯文本命令
-        # 我们通过 mapfile 或 readarray 将其读入 Bash 数组
         readarray -t cmd_list < <(jq -r ".items[$idx].command[]" "$CONFIG_FILE")
         
         local total=${#cmd_list[@]}
         local count=1
         for cmd in "${cmd_list[@]}"; do
-            echo -e "   \033[90m(步骤 $count/$total)\033[0m 执行: $cmd"
+            echo -e "   ${BLUE}(步骤 $count/$total)${NC} 执行：$cmd"
             eval "$cmd"
             
             # 检查每一步的执行结果
             if [ $? -ne 0 ]; then
-                echo -e "\033[31m[错误]\033[0m 步骤 $count 执行失败。"
+                echo -e "${RED}[错误]${NC} 步骤 $count 执行失败。"
                 return 1
             fi
             ((count++))
@@ -113,40 +104,210 @@ execute_task() {
     else
         # 3. 如果是普通字符串，直接执行
         local cmd=$(jq -r ".items[$idx].command" "$CONFIG_FILE")
-        echo "执行命令: $cmd"
+        echo "执行命令：$cmd"
         eval "$cmd"
     fi
 
     if [ $? -eq 0 ]; then
-        echo -e "\033[32m[成功]\033[0m: $name 处理完毕。"
+        echo -e "${GREEN}[成功]${NC}: $name 处理完毕。"
     else
-        echo -e "\033[31m[失败]\033[0m: $name 在执行过程中出错。"
+        echo -e "${RED}[失败]${NC}: $name 在执行过程中出错。"
     fi
 }
 
-# 6. 显示交互菜单
-PS3="请输入选项数字 [1-$((${#options[@]}))]: "
-select opt in "${options[@]}"; do
-    case $REPLY in
+# 5. 更换系统软件源子菜单函数
+change_repo_source() {
+    while true; do
+        clear
+        echo "===================================================="
+        echo "        更换系统软件源"
+        echo "===================================================="
+        echo ""
+        echo "  1) 更换为 Debian 官方源"
+        echo "  2) 更换为阿里云源"
+        echo "  3) 返回主菜单"
+        echo ""
+        echo "===================================================="
+        
+        read -p "请输入选项数字 [1-3]: " source_choice
+        
+        case $source_choice in
+            1)
+                echo -e "${YELLOW}正在更换为 Debian 官方源...${NC}"
+                
+                # 检测系统版本
+                if [ -f /etc/debian_version ]; then
+                    DEBIAN_VERSION=$(cat /etc/debian_version)
+                    CODENAME=""
+                    
+                    # 根据版本确定代号
+                    if echo "$DEBIAN_VERSION" | grep -q "12"; then
+                        CODENAME="bookworm"
+                    elif echo "$DEBIAN_VERSION" | grep -q "11"; then
+                        CODENAME="bullseye"
+                    elif echo "$DEBIAN_VERSION" | grep -q "10"; then
+                        CODENAME="buster"
+                    else
+                        CODENAME="stable"
+                    fi
+                    
+                    # 备份原有源
+                    cp /etc/apt/sources.list /etc/apt/sources.list.bak.$(date +%Y%m%d%H%M%S)
+                    
+                    # 写入官方源
+                    cat > /etc/apt/sources.list <<EOFSRC
+deb http://deb.debian.org/debian $CODENAME main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian $CODENAME-updates main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian-security $CODENAME-security main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian $CODENAME-backports main contrib non-free non-free-firmware
+EOFSRC
+                    
+                    echo -e "${GREEN}✓ Debian 官方源已配置${NC}"
+                    echo "  已备份原配置文件"
+                    echo "  正在更新软件包列表..."
+                    apt update
+                    
+                    if [ $? -eq 0 ]; then
+                        echo -e "${GREEN}✓ 软件源更新成功！${NC}"
+                    else
+                        echo -e "${RED}✗ 更新失败，请检查网络连接${NC}"
+                    fi
+                else
+                    echo -e "${RED}✗ 非 Debian 系统，无法配置 Debian 源${NC}"
+                fi
+                
+                read -p "按回车键继续..."
+                ;;
+                
+            2)
+                echo -e "${YELLOW}正在更换为阿里云源...${NC}"
+                
+                # 检测系统类型
+                if [ -f /etc/debian_version ]; then
+                    # Debian/Ubuntu 系统
+                    DEBIAN_VERSION=$(cat /etc/debian_version)
+                    CODENAME=""
+                    
+                    # 根据版本确定代号
+                    if echo "$DEBIAN_VERSION" | grep -q "12"; then
+                        CODENAME="bookworm"
+                    elif echo "$DEBIAN_VERSION" | grep -q "11"; then
+                        CODENAME="bullseye"
+                    elif echo "$DEBIAN_VERSION" | grep -q "10"; then
+                        CODENAME="buster"
+                    else
+                        CODENAME="stable"
+                    fi
+                    
+                    # 备份原有源
+                    cp /etc/apt/sources.list /etc/apt/sources.list.bak.$(date +%Y%m%d%H%M%S)
+                    
+                    # 写入阿里云源
+                    cat > /etc/apt/sources.list <<EOFSRC
+deb http://mirrors.aliyun.com/debian $CODENAME main contrib non-free non-free-firmware
+deb http://mirrors.aliyun.com/debian $CODENAME-updates main contrib non-free non-free-firmware
+deb http://mirrors.aliyun.com/debian-security $CODENAME-security main contrib non-free non-free-firmware
+deb http://mirrors.aliyun.com/debian $CODENAME-backports main contrib non-free non-free-firmware
+EOFSRC
+                    
+                    echo -e "${GREEN}✓ 阿里云源已配置${NC}"
+                    echo "  已备份原配置文件"
+                    echo "  正在更新软件包列表..."
+                    apt update
+                    
+                    if [ $? -eq 0 ]; then
+                        echo -e "${GREEN}✓ 软件源更新成功！${NC}"
+                    else
+                        echo -e "${RED}✗ 更新失败，请检查网络连接${NC}"
+                    fi
+                    
+                elif [ -f /etc/redhat-release ]; then
+                    # CentOS/RHEL 系统
+                    echo "  检测到 CentOS/RHEL 系统..."
+                    
+                    # 备份原有配置
+                    cp /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.bak.$(date +%Y%m%d%H%M%S) 2>/dev/null
+                    
+                    # 下载阿里云镜像配置
+                    if command -v curl &> /dev/null; then
+                        curl -o /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
+                        echo -e "${GREEN}✓ 阿里云 YUM 源已配置${NC}"
+                        yum makecache
+                    else
+                        echo -e "${RED}✗ 未找到 curl 命令，无法下载配置文件${NC}"
+                    fi
+                else
+                    echo -e "${RED}✗ 未识别的系统类型${NC}"
+                fi
+                
+                read -p "按回车键继续..."
+                ;;
+                
+            3)
+                echo "返回主菜单..."
+                return 0
+                ;;
+                
+            *)
+                echo -e "${RED}无效输入，请重新选择${NC}"
+                read -p "按回车键继续..."
+                ;;
+        esac
+    done
+}
+
+# 6. 显示主菜单函数
+show_main_menu() {
+    clear
+    echo "===================================================="
+    echo "    $TITLE"
+    echo "===================================================="
+    echo ""
+    
+    # 显示选项
+    echo "  1) 【一键安装所有项目】"
+    for i in $(seq 0 $((ITEM_COUNT - 1))); do
+        name=$(jq -r ".items[$i].name" "$CONFIG_FILE")
+        desc=$(jq -r ".items[$i].desc" "$CONFIG_FILE")
+        echo "  $((i + 2))) $name ($desc)"
+    done
+    echo "  $((ITEM_COUNT + 2))) 更换系统软件源"
+    echo "  $((ITEM_COUNT + 3))) 退出脚本"
+    echo ""
+    echo "===================================================="
+}
+
+# 7. 主循环
+while true; do
+    show_main_menu
+    
+    read -p "请输入选项数字 [1-$((ITEM_COUNT + 3))]: " choice
+    
+    case $choice in
         1)
             echo "开始执行全量安装任务..."
             for i in $(seq 0 $((ITEM_COUNT - 1))); do
                 execute_task $i
             done
             echo "--- 所有任务已处理完毕 ---"
+            read -p "按回车键继续..."
             ;;
-        $((${#options[@]})))
+        $((ITEM_COUNT + 2)))
+            change_repo_source
+            ;;
+        $((ITEM_COUNT + 3)))
             echo "已退出，再见！"
             break
             ;;
         *)
-            choice_idx=$((REPLY - 2))
+            choice_idx=$((choice - 2))
             if [ "$choice_idx" -ge 0 ] && [ "$choice_idx" -lt "$ITEM_COUNT" ]; then
                 execute_task $choice_idx
+                read -p "按回车键继续..."
             else
-                echo "无效输入，请重新选择。"
+                echo -e "${RED}无效输入，请重新选择${NC}"
+                read -p "按回车键继续..."
             fi
             ;;
     esac
-    echo -e "\n请继续选择或输入最后一位数字退出。"
 done
