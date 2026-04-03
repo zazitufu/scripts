@@ -29,7 +29,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
   "items": [
     {
       "name": "更新系统软件源",
-      "command": "sudo apt update && sudo apt upgrade -y",
+      "command": "apt update && apt upgrade -y",
       "desc": "适用于 Debian/Ubuntu，更新基础包到最新版本"
     },
     {
@@ -39,7 +39,7 @@ if [ ! -f "$CONFIG_FILE" ]; then
     },
     {
       "name": "Arch 系统清理",
-      "command": "sudo pacman -Sc --noconfirm",
+      "command": "pacman -Sc --noconfirm",
       "desc": "适用于 ArchLinux，清理包管理器缓存"
     },
     {
@@ -62,9 +62,9 @@ fi
 if ! command -v jq &> /dev/null; then
     echo "正在检查系统并安装依赖 jq..."
     if command -v apt &> /dev/null; then
-        sudo apt update && sudo apt install -y jq
+        apt update && apt install -y jq
     elif command -v pacman &> /dev/null; then
-        sudo pacman -Sy --noconfirm jq
+        pacman -Sy --noconfirm jq
     else
         echo "未能识别包管理器，请手动安装 jq 后再运行此脚本。"
         exit 1
