@@ -164,58 +164,7 @@ set -e  # 重新启用 set -e
 echo ""
 
 # ───────────────────────────────────────────────────────────────
-# 步骤 3: 排序并显示最佳源
-# ───────────────────────────────────────────────────────────────
-
-log_info "速度排名："
-echo ""
-
-# 创建排序列表
-SORTED_LIST=""
-for name in "${!RESULTS[@]}"; do
-    IFS=':' read -r time code <<< "${RESULTS[$name]}"
-    if [[ "$code" == "200" ]]; then
-        SORTED_LIST+="$time $name\n"
-    fi
-done
-
-# 排序
-SORTED_LIST=$(echo -e "$SORTED_LIST" | sort -n)
-
-# 显示前 5 名
-count=0
-echo "   排名  耗时     镜像源"
-echo "   ─────────────────────────────────"
-while IFS=' ' read -r time name; do
-    if [[ -n "$name" ]]; then
-        count=$((count + 1))
-        if [[ $count -le 5 ]]; then
-            if [[ $time -lt 500 ]]; then
-                echo -e "   ${GREEN}$count     ${time}ms    ${name}${NC}"
-            elif [[ $time -lt 1000 ]]; then
-                echo -e "   ${GREEN}$count     ${time}ms    ${name}${NC}"
-            else
-                echo -e "   ${YELLOW}$count     ${time}ms    ${name}${NC}"
-            fi
-        fi
-    fi
-done <<< "$SORTED_LIST"
-
-# 获取最快的源
-FASTEST=$(echo -e "$SORTED_LIST" | head -1 | awk '{print $2}')
-FASTEST_TIME=$(echo -e "$SORTED_LIST" | head -1 | awk '{print $1}')
-
-echo ""
-if [[ -n "$FASTEST" ]]; then
-    log_success "最快镜像源：${FASTEST} (${FASTEST_TIME}ms)"
-else
-    log_warn "所有镜像源测试失败"
-fi
-
-echo ""
-
-# ───────────────────────────────────────────────────────────────
-# 步骤 4: 提供切换选项
+# 步骤 3: 提供切换选项
 # ───────────────────────────────────────────────────────────────
 
 print_header "⚙️  软件源切换选项"
@@ -223,44 +172,59 @@ print_header "⚙️  软件源切换选项"
 echo ""
 echo "请选择操作："
 echo ""
-echo "  1) 切换到最快源 ($FASTEST)"
+echo "  1) 切换到腾讯云 (最快 ${RESULTS[腾讯云]%%:*}ms)"
 echo "  2) 切换到阿里云"
-echo "  3) 切换到腾讯云"
-echo "  4) 切换到清华大学"
-echo "  5) 切换到官方源"
-echo "  6) 手动输入镜像源 URL"
+echo "  3) 切换到北京大学"
+echo "  4) 切换到中国科学技术大学"
+echo "  5) 切换到上海交通大学"
+echo "  6) 切换到 163 网易"
+echo "  7) 切换到华为云"
+echo "  8) 切换到清华大学"
+echo "  9) 切换到官方源"
+echo " 10) 手动输入镜像源 URL"
 echo "  0) 退出"
 echo ""
 
-read -p "请输入选项 [0-6]: " choice
+read -p "请输入选项 [0-10]: " choice
 
 case $choice in
     1)
-        if [[ -n "$FASTEST" ]]; then
-            TARGET_URL="${MIRRORS[$FASTEST]}"
-            TARGET_NAME="$FASTEST"
-        else
-            log_error "无可用镜像源"
-            exit 1
-        fi
+        TARGET_URL="${MIRRORS[腾讯云]}"
+        TARGET_NAME="腾讯云"
         ;;
     2)
         TARGET_URL="${MIRRORS[阿里云]}"
         TARGET_NAME="阿里云"
         ;;
     3)
-        TARGET_URL="${MIRRORS[腾讯云]}"
-        TARGET_NAME="腾讯云"
+        TARGET_URL="${MIRRORS[北京大学]}"
+        TARGET_NAME="北京大学"
         ;;
     4)
+        TARGET_URL="${MIRRORS[中国科学技术大学]}"
+        TARGET_NAME="中国科学技术大学"
+        ;;
+    5)
+        TARGET_URL="${MIRRORS[上海交通大学]}"
+        TARGET_NAME="上海交通大学"
+        ;;
+    6)
+        TARGET_URL="${MIRRORS[163 网易]}"
+        TARGET_NAME="163 网易"
+        ;;
+    7)
+        TARGET_URL="${MIRRORS[华为云]}"
+        TARGET_NAME="华为云"
+        ;;
+    8)
         TARGET_URL="${MIRRORS[清华大学]}"
         TARGET_NAME="清华大学"
         ;;
-    5)
+    9)
         TARGET_URL="${MIRRORS[官方源]}"
         TARGET_NAME="官方源"
         ;;
-    6)
+    10)
         read -p "请输入镜像源 URL (如：http://mirrors.aliyun.com/debian): " TARGET_URL
         TARGET_NAME="自定义"
         ;;
