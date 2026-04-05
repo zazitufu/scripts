@@ -62,11 +62,11 @@ declare -A MIRRORS=(
 )
 
 # 当前系统版本
+DEBIAN_VERSION=$(cat /etc/debian_version 2>/dev/null | cut -d'.' -f1 || echo "13")
 if [[ -f /etc/os-release ]]; then
-    CODENAME=$(grep "^VERSION_CODENAME=" /etc/os-release | cut -d'=' -f2)
+    CODENAME=$(grep "^VERSION_CODENAME=" /etc/os-release | cut -d'=' -f2 || echo "")
 fi
 if [[ -z "$CODENAME" ]]; then
-    DEBIAN_VERSION=$(cat /etc/debian_version 2>/dev/null | cut -d'.' -f1)
     # 根据版本确定代号
     case "$DEBIAN_VERSION" in
         13) CODENAME="trixie" ;;
@@ -124,14 +124,16 @@ echo ""
 declare -A RESULTS
 declare -a SORTED_MIRRORS
 
-# 测试每个源
+# 测试每个源 (临时禁用 set -e，避免 curl 失败导致脚本退出)
+set +e
 for name in "${!MIRRORS[@]}"; do
     url="${MIRRORS[$name]}"
     test_url="${url}/dists/${CODENAME}/Release"
     
     # 测试连接时间 (毫秒)
     start_time=$(date +%s%N)
-    response=$(curl -s --connect-timeout 5 --max-time 10 -o /dev/null -w "%{http_code}" "$test_url" 2>/dev/null)
+    response=$(curl -s --connect-timeout 5 --max-time 10 -o /dev/null -w "%{http_code}" "$test_url" 2>&1)
+    curl_exit=$?
     end_time=$(date +%s%N)
     
     # 计算耗时
@@ -157,6 +159,7 @@ for name in "${!MIRRORS[@]}"; do
     
     printf "   %-30s %b\n" "$name" "$status"
 done
+set -e  # 重新启用 set -e
 
 echo ""
 
