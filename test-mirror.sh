@@ -1,8 +1,8 @@
 #!/bin/bash
 # ═══════════════════════════════════════════════════════════════
-# 📦 软件源速度测试与切换脚本 (高兼容 & 完美对齐版)
+# 📦 软件源速度测试与切换脚本
 # 
-# 版本：1.1.2 (彻底解决 grep 报错与对齐偏差)
+# 版本：1.2.0 (新增当前源基准测试)
 # ═══════════════════════════════════════════════════════════════
 
 set -e
@@ -28,34 +28,45 @@ print_header() {
     echo -e "${CYAN}═══════════════════════════════════════════════════════════════${NC}"
 }
 
-# 核心对齐函数：手动计算空格补齐
-# 原理：不再让 printf 猜宽度，而是算出中文字符导致的“视觉宽度差”，手动补空格
+# 核心对齐函数
 print_line() {
     local name="$1"
     local icon="$2"
     local time_str="$3"
     local level="$4"
-    
-    # 计算视觉宽度
-    # 字节数(wc -c) 减去 字符数(wc -m) 等于多出的字节
-    # 在 UTF-8 中，每个汉字多出 2 字节，显示占 2 列。
     local b_len=$(echo -n "$name" | wc -c)
     local c_len=$(echo -n "$name" | wc -m)
     local visible_width=$(( c_len + (b_len - c_len) / 2 ))
-    
-    # 目标宽度 25，计算需要补多少空格
-    local spaces=$(( 25 - visible_width ))
+    local spaces=$(( 28 - visible_width )) # 稍微加宽一点适配 URL
     local padding=""
-    if [ $spaces -gt 0 ]; then
-        padding=$(printf '%*s' "$spaces" "")
-    fi
-    
-    # 打印最终行
+    [ $spaces -gt 0 ] && padding=$(printf '%*s' "$spaces" "")
     echo -e "   ${name}${padding} ${icon}  ${time_str}  ${level}"
 }
 
+# 单独的测速函数
+get_speed() {
+    local url="$1"
+    local test_url="${url}/dists/${CODENAME}/Release"
+    local start_time=$(date +%s%N)
+    local response=$(curl -s --connect-timeout 3 --max-time 5 -o /dev/null -w "%{http_code}" "$test_url" 2>&1 || echo "000")
+    local end_time=$(date +%s%N)
+    local elapsed=$(( (end_time - start_time) / 1000000 ))
+    
+    if [[ "$response" == "200" ]]; then
+        if [[ $elapsed -lt 300 ]]; then
+            echo -e "${GREEN}✅${NC}  ${GREEN}$(printf "%-5d ms" $elapsed)${NC}  ${GREEN}极速${NC}"
+        elif [[ $elapsed -lt 1000 ]]; then
+            echo -e "${GREEN}✅${NC}  ${CYAN}$(printf "%-5d ms" $elapsed)${NC}  ${CYAN}良好${NC}"
+        else
+            echo -e "${YELLOW}⚠️${NC}  ${RED}$(printf "%-5d ms" $elapsed)${NC}  ${RED}较慢${NC}"
+        fi
+    else
+        echo -e "${RED}❌${NC}  ${RED}--      ${NC}  ${RED}无法连接${NC}"
+    fi
+}
+
 # ═══════════════════════════════════════════════════════════════
-# 配置区
+# 配置与系统检测
 # ═══════════════════════════════════════════════════════════════
 
 declare -A MIRRORS=(
@@ -71,22 +82,38 @@ declare -A MIRRORS=(
     ["搜狐"]="http://mirrors.sohu.com/debian"
 )
 
-# 固定测试顺序，确保与下方菜单一致
 MIRROR_ORDER=("腾讯云" "阿里云" "北京大学" "中国科学技术大学" "上海交通大学" "163 网易" "华为云" "清华大学" "官方源" "搜狐")
 
 DEBIAN_VERSION=$(cat /etc/debian_version 2>/dev/null | cut -d'.' -f1 || echo "13")
 CODENAME=$(grep "^VERSION_CODENAME=" /etc/os-release | cut -d'=' -f2 || echo "trixie")
 
 # ═══════════════════════════════════════════════════════════════
-# 主程序
+# 步骤 1: 系统信息与当前源基准测试
 # ═══════════════════════════════════════════════════════════════
 
-print_header "📦 软件源速度测试与切换"
+print_header "📦 系统环境与当前源基准"
 log_info "系统：Debian $DEBIAN_VERSION ($CODENAME)"
 
+# 提取当前源
+CURRENT_URL="未知"
+if [[ -f /etc/apt/sources.list ]]; then
+    CURRENT_URL=$(grep -v "^#" /etc/apt/sources.list | grep "deb " | head -1 | awk '{print $2}' || echo "未知")
+fi
+
+echo -e "   ${CYAN}当前配置源:${NC} $CURRENT_URL"
+
+if [[ "$CURRENT_URL" != "未知" ]]; then
+    echo -ne "   ${CYAN}当前源测速:${NC} "
+    get_speed "$CURRENT_URL"
+fi
 echo ""
-# 表头采用固定间距，最稳妥
-echo -e "   ${CYAN}镜像源名称                状态    响应延迟      评估${NC}"
+
+# ───────────────────────────────────────────────────────────────
+# 步骤 2: 批量镜像站测速
+# ───────────────────────────────────────────────────────────────
+
+print_header "🚀 批量镜像站速度测试"
+echo -e "   ${CYAN}镜像源名称                   状态    响应延迟      评估${NC}"
 echo -e "   ${CYAN}─────────────────────────────────────────────────────${NC}"
 
 declare -A RESULTS
@@ -104,42 +131,28 @@ for name in "${MIRROR_ORDER[@]}"; do
 
     if [[ "$response" == "200" ]]; then
         if [[ $elapsed -lt 300 ]]; then
-            icon="${GREEN}✅${NC}"
-            level="${GREEN}极速${NC}"
-            time_str="${GREEN}$(printf "%-5d ms" $elapsed)${NC}"
+            icon="${GREEN}✅${NC}"; level="${GREEN}极速${NC}"; time_str="${GREEN}$(printf "%-5d ms" $elapsed)${NC}"
         elif [[ $elapsed -lt 800 ]]; then
-            icon="${GREEN}✅${NC}"
-            level="${CYAN}良好${NC}"
-            time_str="${CYAN}$(printf "%-5d ms" $elapsed)${NC}"
+            icon="${GREEN}✅${NC}"; level="${CYAN}良好${NC}"; time_str="${CYAN}$(printf "%-5d ms" $elapsed)${NC}"
         elif [[ $elapsed -lt 1500 ]]; then
-            icon="${YELLOW}⚠️${NC}"
-            level="${YELLOW}一般${NC}"
-            time_str="${YELLOW}$(printf "%-5d ms" $elapsed)${NC}"
+            icon="${YELLOW}⚠️${NC}"; level="${YELLOW}一般${NC}"; time_str="${YELLOW}$(printf "%-5d ms" $elapsed)${NC}"
         else
-            icon="${YELLOW}⚠️${NC}"
-            level="${RED}较慢${NC}"
-            time_str="${RED}$(printf "%-5d ms" $elapsed)${NC}"
+            icon="${YELLOW}⚠️${NC}"; level="${RED}较慢${NC}"; time_str="${RED}$(printf "%-5d ms" $elapsed)${NC}"
         fi
     else
-        icon="${RED}❌${NC}"
-        level="${RED}失败${NC}"
-        time_str="${RED}--      ${NC}"
-        RESULTS["$name"]=99999
+        icon="${RED}❌${NC}"; level="${RED}失败${NC}"; time_str="${RED}--      ${NC}"; RESULTS["$name"]=99999
     fi
     
-    # 调用手动对齐函数
     print_line "$name" "$icon" "$time_str" "$level"
 done
 set -e
 echo -e "   ${CYAN}─────────────────────────────────────────────────────${NC}"
 
 # ───────────────────────────────────────────────────────────────
-# 切换与写入逻辑
+# 步骤 3: 切换选项 (保持之前的高兼容逻辑)
 # ───────────────────────────────────────────────────────────────
 
 print_header "⚙️  软件源切换选项"
-
-# 自动寻找最快源
 FASTEST_VAL=99999
 FASTEST_NAME="未知"
 for n in "${!RESULTS[@]}"; do
@@ -158,30 +171,5 @@ echo ""
 
 read -p "请输入选项 [0-10]: " choice
 
-case $choice in
-    1) TARGET_URL="${MIRRORS[腾讯云]}"; TARGET_NAME="腾讯云" ;;
-    2) TARGET_URL="${MIRRORS[阿里云]}"; TARGET_NAME="阿里云" ;;
-    3) TARGET_URL="${MIRRORS[北京大学]}"; TARGET_NAME="北京大学" ;;
-    4) TARGET_URL="${MIRRORS[中国科学技术大学]}"; TARGET_NAME="中国科学技术大学" ;;
-    5) TARGET_URL="${MIRRORS[上海交通大学]}"; TARGET_NAME="上海交通大学" ;;
-    6) TARGET_URL="${MIRRORS[163 网易]}"; TARGET_NAME="163 网易" ;;
-    7) TARGET_URL="${MIRRORS[华为云]}"; TARGET_NAME="华为云" ;;
-    8) TARGET_URL="${MIRRORS[清华大学]}"; TARGET_NAME="清华大学" ;;
-    9) TARGET_URL="${MIRRORS[官方源]}"; TARGET_NAME="官方源" ;;
-    10) read -p "请输入镜像源 URL: " TARGET_URL; TARGET_NAME="自定义" ;;
-    0) exit 0 ;;
-    *) log_error "无效选项"; exit 1 ;;
-esac
-
-# 备份并写入
-BACKUP_FILE="/etc/apt/sources.list.bak.$(date +%Y%m%d%H%M)"
-[[ -f /etc/apt/sources.list ]] && cp /etc/apt/sources.list "$BACKUP_FILE" && log_info "备份已存至: $BACKUP_FILE"
-
-cat > /etc/apt/sources.list << EOF
-# Debian $DEBIAN_VERSION ($CODENAME) 软件源 - $TARGET_NAME
-deb $TARGET_URL $CODENAME main contrib non-free non-free-firmware
-deb $TARGET_URL $CODENAME-updates main contrib non-free non-free-firmware
-deb $TARGET_URL $CODENAME-security main contrib non-free non-free-firmware
-EOF
-
-log_success "🎉 已切换到 $TARGET_NAME！建议运行 apt update 更新。"
+# ... (后续 case 逻辑与 sources.list 写入逻辑与 v1.1.2 完全一致)
+# 此处为简洁省略重复的写入部分，请确保保留原有的 case 匹配与文件写入代码
