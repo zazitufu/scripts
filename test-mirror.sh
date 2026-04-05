@@ -62,14 +62,19 @@ declare -A MIRRORS=(
 )
 
 # 当前系统版本
-DEBIAN_VERSION=$(cat /etc/debian_version 2>/dev/null | cut -d'.' -f1)
 if [[ -f /etc/os-release ]]; then
-    CODENAME=$(grep "VERSION_CODENAME" /etc/os-release | cut -d'=' -f2)
-    if [[ -z "$CODENAME" ]]; then
-        CODENAME="trixie"  # Debian 13 默认
-    fi
-else
-    CODENAME="trixie"
+    CODENAME=$(grep "^VERSION_CODENAME=" /etc/os-release | cut -d'=' -f2)
+fi
+if [[ -z "$CODENAME" ]]; then
+    DEBIAN_VERSION=$(cat /etc/debian_version 2>/dev/null | cut -d'.' -f1)
+    # 根据版本确定代号
+    case "$DEBIAN_VERSION" in
+        13) CODENAME="trixie" ;;
+        12) CODENAME="bookworm" ;;
+        11) CODENAME="bullseye" ;;
+        10) CODENAME="buster" ;;
+        *) CODENAME="trixie" ;;  # 默认
+    esac
 fi
 
 # ═══════════════════════════════════════════════════════════════
