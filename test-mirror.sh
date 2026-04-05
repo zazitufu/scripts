@@ -188,7 +188,7 @@ echo "   排名  耗时     镜像源"
 echo "   ─────────────────────────────────"
 while IFS=' ' read -r time name; do
     if [[ -n "$name" ]]; then
-        ((count++))
+        count=$((count + 1))
         if [[ $count -le 5 ]]; then
             if [[ $time -lt 500 ]]; then
                 echo -e "   ${GREEN}$count     ${time}ms    ${name}${NC}"
