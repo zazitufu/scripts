@@ -145,22 +145,26 @@ for name in "${!MIRRORS[@]}"; do
     # 判断状态
     if [[ "$response" == "200" ]]; then
         if [[ $elapsed -lt 500 ]]; then
+            icon="✅"
             level="优秀"
         elif [[ $elapsed -lt 1000 ]]; then
+            icon="✅"
             level="良好"
         elif [[ $elapsed -lt 2000 ]]; then
+            icon="⚠️"
             level="一般"
         else
+            icon="⚠️"
             level="较慢"
         fi
-        time_display=$(printf "%6d ms" $elapsed)
+        time_display=$(printf "%-8d ms" $elapsed)
     else
+        icon="❌"
         level="失败"
-        time_display="   --   "
+        time_display="--       "
     fi
     
-    # 简单输出，让终端自己处理颜色
-    printf "   ●  %-20s %s  %s\n" "$name" "$time_display" "$level"
+    printf "   %-25s  %s  %s  %s\n" "$name" "$icon" "$time_display" "$level"
 done
 set -e  # 重新启用 set -e
 
