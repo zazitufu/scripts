@@ -145,26 +145,27 @@ for name in "${!MIRRORS[@]}"; do
     # 判断状态
     if [[ "$response" == "200" ]]; then
         if [[ $elapsed -lt 500 ]]; then
-            icon="${GREEN}●${NC}"
+            color="$GREEN"
             level="优秀"
         elif [[ $elapsed -lt 1000 ]]; then
-            icon="${GREEN}●${NC}"
+            color="$GREEN"
             level="良好"
         elif [[ $elapsed -lt 2000 ]]; then
-            icon="${YELLOW}●${NC}"
+            color="$YELLOW"
             level="一般"
         else
-            icon="${YELLOW}●${NC}"
+            color="$YELLOW"
             level="较慢"
         fi
         time_display=$(printf "%6d ms" $elapsed)
     else
-        icon="${RED}●${NC}"
+        color="$RED"
         level="失败"
         time_display="   --   "
     fi
     
-    printf "   %s  %-20s %s  %s\n" "$icon" "$name" "$time_display" "$level"
+    # 使用 echo -e 来正确渲染颜色
+    echo -e "   ${color}●${NC}  ${name}    ${time_display}  ${level}"
 done
 set -e  # 重新启用 set -e
 
