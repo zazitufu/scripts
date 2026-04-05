@@ -83,7 +83,7 @@ fi
 
 print_header "📦 软件源速度测试与切换"
 
-log_info "系统版本：Debian $DEBIAN ($CODENAME)"
+log_info "系统版本：Debian $DEBIAN.$DEBIAN_VERSION ($CODENAME)"
 echo ""
 
 # ───────────────────────────────────────────────────────────────
@@ -145,19 +145,26 @@ for name in "${!MIRRORS[@]}"; do
     # 判断状态
     if [[ "$response" == "200" ]]; then
         if [[ $elapsed -lt 500 ]]; then
-            status="${GREEN}✅ ${elapsed}ms${NC}"
+            icon="${GREEN}●${NC}"
+            level="优秀"
         elif [[ $elapsed -lt 1000 ]]; then
-            status="${GREEN}✅ ${elapsed}ms${NC}"
+            icon="${GREEN}●${NC}"
+            level="良好"
         elif [[ $elapsed -lt 2000 ]]; then
-            status="${YELLOW}⚠️  ${elapsed}ms${NC}"
+            icon="${YELLOW}●${NC}"
+            level="一般"
         else
-            status="${RED}❌ ${elapsed}ms${NC}"
+            icon="${YELLOW}●${NC}"
+            level="较慢"
         fi
+        time_display=$(printf "%6d ms" $elapsed)
     else
-        status="${RED}❌ 失败 (${response})${NC}"
+        icon="${RED}●${NC}"
+        level="失败"
+        time_display="   --   "
     fi
     
-    printf "   %-30s %b\n" "$name" "$status"
+    printf "   %s  %-20s %s  %s\n" "$icon" "$name" "$time_display" "$level"
 done
 set -e  # 重新启用 set -e
 
